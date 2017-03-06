@@ -162,7 +162,9 @@ winston.debug2("/src/index.js:3:test.length", test.length);
 ## Future
 - Check behaviour with different patterns
 - Check line number detection with different loaders and maybe update how-to to prevent incorrect usage
+- Disable ts-lint and es-lint max-line-length rule for lines with modified logger call
 - Add tests
+- Add examples directory
 
 
 ## License
