@@ -159,6 +159,12 @@ winston.debug2("/src/index.js:3:test.length", test.length);
 5. Fix bugs or implement features
 
 
+## Future
+- Check behaviour with different patterns
+- Check line number detection with different loaders and maybe update how-to to prevent incorrect usage
+- Add tests
+
+
 ## License
 This project is licensed under the terms of the
 [MIT license](https://github.com/gordienkotolik/logs-loader/blob/master/LICENSE)
