@@ -1,10 +1,13 @@
-import utils from 'loader-utils';
+import {getOptions} from 'loader-utils';
 import {resolve} from 'path';
 import escapeStringRegexp  from 'escape-string-regexp';
 
-const REGEX_NEWLINE = /(\r?\n)/;
+const REGEX_NEWLINE = /(?:\r\n|\r|\n)/g;
+const REGEX_START_QUOTES = /^(['"]{1})/g;
+const REGEX_END_QUOTES = /(['"]+){1}$/g;
 
-const escapedRootPath = escapeStringRegexp(resolve(process.cwd()));
+const ROOT_PATH = resolve(process.cwd());
+const escapedRootPath = escapeStringRegexp(ROOT_PATH);
 
 function createPattern(patterns: string[], customLevels: string[]) {
   const methods = [
@@ -17,13 +20,25 @@ function createPattern(patterns: string[], customLevels: string[]) {
 }
 
 function replacer(fileName: string, lineNumber: number) {
-  return (str: string, logger: string, level: string, args: string, offset: number, s: string) => {
+  return (str: string, loggerObjectName: string, level: string, args: string, offset: number, s: string) => {
+    // console.info('str', str);
+    // console.info('args', args);
+    if(args.length < 3 || !args.startsWith('(') || !args.endsWith(')')) return str;
     const loggingArgs = args.replace(/[\(\);]+/g, '').trim().split(',').map((arg: string) => arg.trim());
-    const filePath = fileName.replace(new RegExp(`^(${escapedRootPath})`), "").split('\\').map((fileNamePart: string) => fileNamePart.trim()).join('/');
-    const lastArg = loggingArgs[loggingArgs.length - 1];
-    return logger + level + "('" + filePath + ":" + lineNumber + ":" + lastArg + ":', " + loggingArgs.join(', ') + ");";
+    const filePath = fileName.replace(new RegExp(`^(${escapedRootPath})`), "").split('\\')
+      .map((fileNamePart: string) => fileNamePart.trim()).join('/');
+    const lastArg = (loggingArgs[loggingArgs.length - 1])
+      .replace(REGEX_START_QUOTES, '')
+      .replace(REGEX_END_QUOTES, '')
+      .replace(/(\\?')/g, '\\\'')
+      .replace(/(\\?")/g, '\\"');
+    const newStr = loggerObjectName + (level || '') +
+      "('" + filePath + ":" + lineNumber + ":" +
+      lastArg +
+      ":', " + loggingArgs.join(", ") + ");";
+    // console.info('newStr', newStr);
+    return newStr;
   }
-  // console.info(J, inetpub, gasite.in.ua, src, shared, components, Library, FlexDataTable, Body, Column, index.tsx, 63, event, ('editorOnValueChange', event));
 }
 
 function LogsLoader(resourcePath: string, content: string, query: any, cb: Function) {
@@ -33,7 +48,7 @@ function LogsLoader(resourcePath: string, content: string, query: any, cb: Funct
     if(typeof query === "object") {
       if(typeof query.patterns === "string") patterns = [query.patterns];
       else if(Array.isArray(query.patterns)) patterns = query.patterns;
-      if(patterns.length < 1) throw new Error("MeaningfulLogsPlugin requires at least one pattern to be specified.");
+      if(patterns.length < 1) throw new Error("Logs loader requires at least one pattern to be specified.");
       if(typeof query.customLevels === "string") customLevels = [query.customLevels];
       else if(Array.isArray(query.customLevels)) customLevels = query.customLevels;
     }
@@ -41,7 +56,7 @@ function LogsLoader(resourcePath: string, content: string, query: any, cb: Funct
 
     const newSourceCode = content
       .split(REGEX_NEWLINE)
-      .map((line: string, index: number) => line.replace(pattern, replacer(resourcePath, index)))
+      .map((line: string, index: number) => line.replace(pattern, replacer(resourcePath, index + 1)))
       .join('\n');
 
     cb(null, newSourceCode);
@@ -54,10 +69,12 @@ function LogsLoader(resourcePath: string, content: string, query: any, cb: Funct
 module.exports = function(source: string) {
   if(this.cacheable) this.cacheable();
 
-  const query = utils.parseQuery(this.query);
-  console.info('query', query);
+  const query = getOptions({
+    query: this.query,
+  });
+  // console.info('query', query);
   const resourcePath = this.resourcePath;
-  console.info('resourcePath', resourcePath);
+  // console.info('resourcePath', resourcePath);
 
   const asyncCallback = this.async();
   const callback = asyncCallback || this.callback;

@@ -24,6 +24,8 @@ yarn add logs-loader --dev
 
 ## Usage
 A webpack loader that enhances your logs by adding the file and the object logging.
+
+Note: put it before any linter in your webpack config "module->rules->use" list to prevent max-line-length warnings.
 # src/index.js
 ```javascript
 const test = ['test'];
@@ -69,13 +71,13 @@ module.exports = {
             },
           },
           {loader: 'ts-loader', options: {transpileOnly: false}},
-          {loader: 'tslint-loader'},
           {
             loader: 'logs-loader',
             query: {
               patterns: ["console"],
             },
           },
+          {loader: 'tslint-loader'},
         ],
       },
       {
@@ -146,8 +148,8 @@ winston.debug2("/src/index.js:3:test.length", test.length);
 #### Properties
 | Props        | Options           | Default  | Description |
 | ------------- |-------------| -----| -------- |
-| patterns | string | Array[string] | ["console"] | Sets pattern of logger call.|
-| customLevels | string | Array[string] | [] | Sets additional custom logging levels.|
+| patterns | string or Array[string] | ["console"] | Sets pattern of logger call.|
+| customLevels | string or Array[string] | [] | Sets additional custom logging levels.|
 
 
 ## Contribute
@@ -160,9 +162,6 @@ winston.debug2("/src/index.js:3:test.length", test.length);
 
 
 ## Future
-- Check behaviour with different patterns
-- Check line number detection with different loaders and maybe update how-to to prevent incorrect usage
-- Disable ts-lint and es-lint max-line-length rule for lines with modified logger call
 - Add tests
 - Add examples directory
 

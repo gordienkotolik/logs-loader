@@ -1,6 +1,6 @@
 {
   "name": "logs-loader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Embed meaningful logs into your webpack bundle.",
   "main": "logs-loader.js",
   "engines": {
@@ -26,7 +26,7 @@
   "homepage": "https://gasite.in.ua/open-source/logs-loader/",
   "dependencies": {
     "escape-string-regexp": "^1.0.5",
-    "loader-utils": "1.0.2",
+    "loader-utils": "1.1.0",
     "webpack": "2.2.1"
   },
   "devDependencies": {
